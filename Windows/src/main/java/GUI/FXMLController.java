@@ -1,16 +1,22 @@
 package GUI;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 
 public class FXMLController {
     
     @FXML
     private Label label;
+    @FXML
+    private Button syncFiles;
     
     public void initialize() {
-        String javaVersion = System.getProperty("java.version");
-        String javafxVersion = System.getProperty("javafx.version");
-        label.setText("Hello, JavaFX " + javafxVersion + "\nRunning on Java " + javaVersion + ".");
+
+        //syncFiles.setTranslateX(100);
+        //syncFiles.setTranslateY(0);
+
+
     }    
 }

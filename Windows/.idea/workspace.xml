@@ -217,9 +217,14 @@
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.0" />
-    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
+    <property name="settings.editor.selected.configurable" value="preferences.JavaFX" />
   </component>
-  <component name="RunManager" selected="Application.DriveService">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Nikola 2.DESKTOP-OV0TEGT\IdeaProjects\Drive\Windows\src\main\resources" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.MainApp">
     <configuration name="DriveService" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="DriveHandling.DriveService" />
       <module name="Google_Drive_Sync.main" />
@@ -269,6 +274,9 @@
     </task>
     <servers />
   </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.csv" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -290,5 +298,9 @@
     </ignored-roots>
     <MESSAGE value="Undelete things" />
     <option name="LAST_COMMIT_MESSAGE" value="Undelete things" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

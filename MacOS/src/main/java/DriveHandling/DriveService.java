@@ -20,6 +20,7 @@ import com.google.api.services.drive.model.Permission;
 
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
@@ -62,37 +63,7 @@ public class DriveService {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void writeFile(String s){
-        try {
-            FileWriter myWriter = new FileWriter("build/resources/main/DriveHandling/folderId.txt");
-            myWriter.write(s);
-            myWriter.close();
-            System.out.println("Successfully wrote to the file.");
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-    }
-
-    //Reads folderId to get Id. If null, will search for valid folder in drive.
-    //If valid folder not found, creates new folder.
-    public static String readFile(){
-        String s = null;
-        try {
-            java.io.File myObj = new java.io.File("build/resources/main/DriveHandling/folderId.txt");
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                s = myReader.nextLine();
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-        return s;
-    }
-
-    //Creates folder and saves id to folderId.txt
+    //Creates folder and saves id to fileLocations.csv
     //Returns Id of folder
     public static String makeFolder(Drive service){
         File fileMetadata = new File();
@@ -105,7 +76,7 @@ public class DriveService {
                     .setFields("id")
                     .execute();
             folderId = file.getId();
-            writeFile(folderId);
+            setFolderId(folderId);
 
         } catch (IOException e) {
             System.out.println("An error occurred in makeFolder().");
@@ -116,23 +87,25 @@ public class DriveService {
     }
 
     //Takes care of uploading file to google drive.
-    public static void uploadFile(Drive service, String folderId){
+    public static void uploadFile(Drive service){
         try {
             File fileMetadata = new File();
             fileMetadata.setName("TestFile.txt");
-            fileMetadata.setParents(Collections.singletonList(folderId));
+            fileMetadata.setParents(Collections.singletonList(getFolderId()));
             java.io.File filePath = new java.io.File("Upload Files/TestFile.txt");
             FileContent mediaContent = new FileContent("text/txt", filePath);
             File file = service.files().create(fileMetadata, mediaContent)
                     .setFields("id")
                     .execute();
         } catch(GoogleJsonResponseException e){
-            folderId = makeFolder(service);
-            uploadFile(service,folderId);
+            makeFolder(service);
+            uploadFile(service);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    //
 
     //Takes in specific file to update
     public static void updateFile(Drive service, String fileId){
@@ -148,6 +121,66 @@ public class DriveService {
         }
     }
 
+    //Reads fileLocations.csv for folder ID
+    //FolderID should always contained in the second line of folderID.csv. Returns null if not present
+    public static String getFolderId(){
+        java.io.File store = new java.io.File("resources/DriveHandling/fileLocations.csv");
+        String line = null;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(store));
+
+            line = br.readLine();
+            line = br.readLine();
+            br.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String[] parts = line.split(",");
+        if(parts[0].equals("Folder")){
+            return parts[1];
+        } else {
+            return null;
+        }
+    }
+
+    //Sets new folderID into fileLocations.csv, always stored in line 2
+    public static void setFolderId(String id){
+        java.io.File store = new java.io.File("resources/DriveHandling/fileLocations.csv");
+        try {
+            StringBuffer inputBuffer = new StringBuffer();
+            BufferedReader br = new BufferedReader(new FileReader(store));
+            String line;
+            int i = 0;
+            while((line = br.readLine()) != null){
+                if(i == 1){
+                    inputBuffer.append("Folder," + id);
+                    inputBuffer.append("\n");
+                } else {
+                    inputBuffer.append(line);
+                    inputBuffer.append("\n");
+                }
+                i++;
+            }
+            br.close();
+
+            FileOutputStream fileOut = new FileOutputStream("fileLocations.csv");
+            fileOut.write(inputBuffer.toString().getBytes(StandardCharsets.UTF_8));
+            fileOut.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Uploads Entire folder to google drive
+
+
+
+    //Uploads Individual file to google drive.
+
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
@@ -158,10 +191,8 @@ public class DriveService {
 
         //When this ends, there should be a valid google drive folder and file
         //to store its id (unless saved id is not valid, will look at later)
-        String folderId = null;
+        String folderId = getFolderId();
         try {
-            folderId = readFile();
-
             if(folderId == null){
                 //Query to try and find existing folder
                 FileList result = service.files().list()
@@ -174,7 +205,7 @@ public class DriveService {
                     System.exit(1);
                 } else if(result.getFiles().size() == 1){
                     folderId = result.getFiles().get(0).getId();
-                    writeFile(folderId);
+                    setFolderId(folderId);
                 } else {
                     folderId = makeFolder(service);
                 }
@@ -190,7 +221,7 @@ public class DriveService {
             e.printStackTrace();
         }
 
-        uploadFile(service,folderId);
+        uploadFile(service);
 
 
     }
