@@ -224,8 +224,9 @@
       <recent name="C:\Users\Nikola 2.DESKTOP-OV0TEGT\IdeaProjects\Drive\Windows\src\main\resources" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.MainApp">
+  <component name="RunManager" selected="Application.DriveService">
     <configuration name="DriveService" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="openjdk-15" />
       <option name="MAIN_CLASS_NAME" value="DriveHandling.DriveService" />
       <module name="Google_Drive_Sync.main" />
       <extension name="coverage">
@@ -298,6 +299,16 @@
     </ignored-roots>
     <MESSAGE value="Undelete things" />
     <option name="LAST_COMMIT_MESSAGE" value="Undelete things" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.io.FileNotFoundException" package="java.io" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

@@ -32,6 +32,8 @@ public class DriveService {
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
+    private static final String FILELOCATIONS_PATH = "src/main/resources/DriveHandling/fileLocations.csv";
+
     /**
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
@@ -105,7 +107,6 @@ public class DriveService {
         }
     }
 
-    //
 
     //Takes in specific file to update
     public static void updateFile(Drive service, String fileId){
@@ -124,7 +125,7 @@ public class DriveService {
     //Reads fileLocations.csv for folder ID
     //FolderID should always contained in the second line of folderID.csv. Returns null if not present
     public static String getFolderId(){
-        java.io.File store = new java.io.File("resources/DriveHandling/fileLocations.csv");
+        java.io.File store = new java.io.File(FILELOCATIONS_PATH);
         String line = null;
         try {
             BufferedReader br = new BufferedReader(new FileReader(store));
@@ -148,7 +149,7 @@ public class DriveService {
 
     //Sets new folderID into fileLocations.csv, always stored in line 2
     public static void setFolderId(String id){
-        java.io.File store = new java.io.File("resources/DriveHandling/fileLocations.csv");
+        java.io.File store = new java.io.File(FILELOCATIONS_PATH);
         try {
             StringBuffer inputBuffer = new StringBuffer();
             BufferedReader br = new BufferedReader(new FileReader(store));
@@ -166,7 +167,7 @@ public class DriveService {
             }
             br.close();
 
-            FileOutputStream fileOut = new FileOutputStream("fileLocations.csv");
+            FileOutputStream fileOut = new FileOutputStream(FILELOCATIONS_PATH);
             fileOut.write(inputBuffer.toString().getBytes(StandardCharsets.UTF_8));
             fileOut.close();
 
@@ -188,7 +189,6 @@ public class DriveService {
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
         //When this ends, there should be a valid google drive folder and file
         //to store its id (unless saved id is not valid, will look at later)
         String folderId = getFolderId();
@@ -212,7 +212,6 @@ public class DriveService {
 
             }
 
-
         } catch(GoogleJsonResponseException e){
             folderId = makeFolder(service);
             e.printStackTrace();
@@ -220,7 +219,6 @@ public class DriveService {
             System.out.println("An error occurred in main.");
             e.printStackTrace();
         }
-
         uploadFile(service);
 
 
