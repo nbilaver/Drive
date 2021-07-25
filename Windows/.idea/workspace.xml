@@ -224,7 +224,7 @@
       <recent name="C:\Users\Nikola 2.DESKTOP-OV0TEGT\IdeaProjects\Drive\Windows\src\main\resources" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.DriveService">
+  <component name="RunManager" selected="Application.MainApp">
     <configuration name="DriveService" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="openjdk-15" />
       <option name="MAIN_CLASS_NAME" value="DriveHandling.DriveService" />

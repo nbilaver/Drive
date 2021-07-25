@@ -41,6 +41,7 @@ public class DriveService {
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
     private static final String CREDENTIALS_FILE_PATH = "/DriveHandling/credentials.json";
 
+
     /**
      * Creates an authorized Credential object.
      * @param HTTP_TRANSPORT The network HTTP Transport.
@@ -105,6 +106,23 @@ public class DriveService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //Downloads files from the google drive folder
+    public static Boolean downloadFile(Drive service){
+        OutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            service.files().get(getFolderId())
+                    .executeMediaAndDownloadTo(outputStream);
+            FileOutputStream fileOut = new FileOutputStream("/Upload Files");
+            fileOut.write(outputStream.toString().getBytes(StandardCharsets.UTF_8));
+            fileOut.close();
+
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+
     }
 
 
@@ -176,50 +194,31 @@ public class DriveService {
         }
     }
 
-    //Uploads Entire folder to google drive
-
-
-
-    //Uploads Individual file to google drive.
-
-
-    public static void main(String... args) throws IOException, GeneralSecurityException {
+    public static Drive driveConnect() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-        //When this ends, there should be a valid google drive folder and file
-        //to store its id (unless saved id is not valid, will look at later)
-        String folderId = getFolderId();
-        try {
-            if(folderId == null){
-                //Query to try and find existing folder
-                FileList result = service.files().list()
-                        .setQ("name='Google Drive Sync' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
-                        .setSpaces("drive")
-                        .setFields("nextPageToken, files(id, name)")
-                        .execute();
-                if(result.getFiles().size() > 1){
-                    System.out.println("Multiple Valid Folders found in Drive");
-                    System.exit(1);
-                } else if(result.getFiles().size() == 1){
-                    folderId = result.getFiles().get(0).getId();
-                    setFolderId(folderId);
-                } else {
-                    folderId = makeFolder(service);
-                }
 
+        if(getFolderId() == null){
+            FileList result = service.files().list()
+                    .setQ("name='Google Drive Sync' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
+                    .setSpaces("drive")
+                    .setFields("nextPageToken, files(id, name)")
+                    .execute();
+            if(result.getFiles().size() > 1){
+                System.out.println("Multiple Valid Folders found in Drive");
+                System.exit(1);
+            } else if(result.getFiles().size() == 1){
+                setFolderId(result.getFiles().get(0).getId());
+            } else {
+                makeFolder(service);
             }
-
-        } catch(GoogleJsonResponseException e){
-            folderId = makeFolder(service);
-            e.printStackTrace();
-        }  catch (IOException e) {
-            System.out.println("An error occurred in main.");
-            e.printStackTrace();
         }
-        uploadFile(service);
+
+        return service;
+
 
 
     }
