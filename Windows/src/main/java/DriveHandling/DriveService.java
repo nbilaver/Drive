@@ -16,15 +16,15 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.drive.model.Permission;
-
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
+
 
 
 public class DriveService {
@@ -40,6 +40,7 @@ public class DriveService {
      */
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
     private static final String CREDENTIALS_FILE_PATH = "/DriveHandling/credentials.json";
+
 
     /**
      * Creates an authorized Credential object.
@@ -89,22 +90,121 @@ public class DriveService {
     }
 
     //Takes care of uploading file to google drive.
-    public static void uploadFile(Drive service){
+    //TODO This will probably make repeats every time it uploads. Will need to fix this. Also folders haven't been tested.
+    public static void updateFolder(Drive service, String path, String folderId){
         try {
-            File fileMetadata = new File();
-            fileMetadata.setName("TestFile.txt");
-            fileMetadata.setParents(Collections.singletonList(getFolderId()));
-            java.io.File filePath = new java.io.File("Upload Files/TestFile.txt");
-            FileContent mediaContent = new FileContent("text/txt", filePath);
-            File file = service.files().create(fileMetadata, mediaContent)
-                    .setFields("id")
-                    .execute();
+            java.io.File uploadF = new java.io.File(path);
+            java.io.File[] directoryListing = uploadF.listFiles();
+            if(directoryListing != null){
+                for(java.io.File child : directoryListing){
+                    if(child.isFile()){
+                        FileList result = service.files().list()
+                                .setQ("name=" + child.getName() +" and " + folderId + " in parents and trashed = false")
+                                .setSpaces("drive")
+                                .setFields("nextPageToken, files(id, name)")
+                                .execute();
+
+                        //TODO FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                        if(result.getFiles().size() == 1){
+
+                        } else if (result.getFiles().size() == 0){
+
+                        }
+
+
+                        File fileMetadata = new File();
+                        fileMetadata.setName(child.getName());
+                        fileMetadata.setParents(Collections.singletonList(getFolderId()));
+
+                        FileContent mediaContent = new FileContent(null,child);
+
+                        File file = service.files().create(fileMetadata, mediaContent)
+                                .setFields("id, parents")
+                                .execute();
+
+                    } else if(child.isDirectory()){
+                        //TODO This always looks at the main folder. Will need to make folderId parameter.
+                        //updateFolder(service,path + "/" + child.getName());
+                    }
+                }
+            }
+
         } catch(GoogleJsonResponseException e){
             makeFolder(service);
-            uploadFile(service);
+            updateFile(service,path);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //Downloads files from the google drive folder
+    //TODO figure out recursive download of the folder
+    public static Boolean downloadFolder(Drive service, String folderId, String path){
+        System.out.println("DOWNLOADING FILE");
+
+        OutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            File currentFolder = service.files().get(folderId).execute();
+            String folderName = currentFolder.getName();
+
+            Files.createDirectories(Paths.get("/" + folderName));
+
+
+            String pageToken = null;
+            do{
+                FileList result = service.files().list()
+                        .setQ("'" + folderId + "' in parents and trashed = false")
+                        .setSpaces("drive")
+                        .setFields("nextPageToken, files(id, name)")
+                        .execute();
+                for(File file : result.getFiles()){
+                    System.out.println(file.getMimeType());
+                    System.out.println(file.getName());
+                    if(file.getMimeType() != null && file.getMimeType().equals("application/vnd.google-apps.folder")){
+                        downloadFolder(service,file.getId(),path + "/" + file.getName());
+                    } else {
+                        service.files().get(file.getId())
+                                .executeMediaAndDownloadTo(outputStream);
+                        FileOutputStream fileOut = new FileOutputStream(path + "/" + file.getName());
+                        //FileOutputStream fileOut = new FileOutputStream("Upload Files/" + file.getName());
+                        fileOut.write(outputStream.toString().getBytes(StandardCharsets.UTF_8));
+                        fileOut.close();
+                    }
+                    pageToken = result.getNextPageToken();
+                }
+            } while(pageToken != null);
+
+            System.out.println("FINISHED DOWNLOADING FILE");
+            return true;
+        } catch (IOException e) {
+            System.out.println("FAILURE");
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+    public static void testing(Drive service){
+        try {
+            FileList result = null;
+            result = service.files().list()
+                    .setQ("'" + getFolderId() + "' in parents and trashed = false")
+                    .setFields("nextPageToken, files(id, name)")
+                    .execute();
+            List<File> files = result.getFiles();
+            if (files == null || files.isEmpty()) {
+                System.out.println("No files found.");
+            } else {
+                System.out.println("Files:");
+                for (File file : files) {
+                    System.out.printf("%s (%s)\n", file.getName(), file.getId());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 
@@ -176,51 +276,29 @@ public class DriveService {
         }
     }
 
-    //Uploads Entire folder to google drive
-
-
-
-    //Uploads Individual file to google drive.
-
-
-    public static void main(String... args) throws IOException, GeneralSecurityException {
+    public static Drive driveConnect() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-        //When this ends, there should be a valid google drive folder and file
-        //to store its id (unless saved id is not valid, will look at later)
-        String folderId = getFolderId();
-        try {
-            if(folderId == null){
-                //Query to try and find existing folder
-                FileList result = service.files().list()
-                        .setQ("name='Google Drive Sync' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
-                        .setSpaces("drive")
-                        .setFields("nextPageToken, files(id, name)")
-                        .execute();
-                if(result.getFiles().size() > 1){
-                    System.out.println("Multiple Valid Folders found in Drive");
-                    System.exit(1);
-                } else if(result.getFiles().size() == 1){
-                    folderId = result.getFiles().get(0).getId();
-                    setFolderId(folderId);
-                } else {
-                    folderId = makeFolder(service);
-                }
 
+        if(getFolderId() == null){
+            FileList result = service.files().list()
+                    .setQ("name='Google Drive Sync' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
+                    .setSpaces("drive")
+                    .setFields("nextPageToken, files(id, name)")
+                    .execute();
+            if(result.getFiles().size() > 1){
+                System.out.println("Multiple Valid Folders found in Drive");
+                System.exit(1);
+            } else if(result.getFiles().size() == 1){
+                setFolderId(result.getFiles().get(0).getId());
+            } else {
+                makeFolder(service);
             }
-
-        } catch(GoogleJsonResponseException e){
-            folderId = makeFolder(service);
-            e.printStackTrace();
-        }  catch (IOException e) {
-            System.out.println("An error occurred in main.");
-            e.printStackTrace();
         }
-        uploadFile(service);
 
-
+        return service;
     }
 }
