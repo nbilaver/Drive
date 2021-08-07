@@ -8,7 +8,7 @@
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="892.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.FXMLController">
    <children>
       <Button fx:id="syncFiles" layoutX="377.0" layoutY="310.0" prefHeight="76.0" prefWidth="138.0" text="Sync Files" />
-      <Button layoutX="378.0" layoutY="440.0" mnemonicParsing="false" prefHeight="76.0" prefWidth="138.0" text="Download Files" />
+      <Button fx:id="dlFiles" layoutX="378.0" layoutY="440.0" mnemonicParsing="false" prefHeight="76.0" prefWidth="138.0" text="Download Files" />
       <Text fill="WHITE" layoutX="309.0" layoutY="125.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Google Drive Sync" textAlignment="CENTER" wrappingWidth="277.0">
          <font>
             <Font size="30.0" />

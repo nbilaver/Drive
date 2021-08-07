@@ -1,3 +1,13 @@
-.label {
-    -fx-text-fill: blue;
+.root{ -fx-background-color: #212121;}
+
+.button{
+    -fx-border-color: #d60b0b;
+    -fx-background-color: #ffffff;
+}
+.button:hover {
+    -fx-background-color: #bdbdbd;
+}
+
+.button:pressed {
+    -fx-background-color: #525252;
 }
