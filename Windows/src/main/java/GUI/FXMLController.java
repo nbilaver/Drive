@@ -31,12 +31,13 @@ public class FXMLController {
     public void initialize() {
 
         syncFiles.setOnAction(value ->  {
-            syncFiles.setText("Clicked!");
+            updateFolder(service,"Upload Files", getFolderId());
             System.out.println(getFolderId());
         });
 
         dlFiles.setOnAction(value ->  {
-            uploadFile(service);
+            downloadFolder(service,getFolderId(),"Upload Files");
+            //testing(service);
             dlFiles.setText("Clicked!");
         });
 
