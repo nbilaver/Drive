@@ -30,6 +30,9 @@ public class MainApp extends Application {
 
         stage.setScene(scene);
         stage.show();
+
+        //Verification of Folder Integrity
+        verifyFolder();
     }
 
     public static void main(String[] args) {

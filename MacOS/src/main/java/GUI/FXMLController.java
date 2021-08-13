@@ -23,7 +23,6 @@ public class FXMLController {
     @FXML
     private Button dlFiles;
 
-    private Drive service = driveConnect();
 
     public FXMLController() throws GeneralSecurityException, IOException {
     }
@@ -31,13 +30,13 @@ public class FXMLController {
     public void initialize() {
 
         syncFiles.setOnAction(value ->  {
-            updateFolder(service,"Upload Files", getFolderId());
-            System.out.println(getFolderId());
+            updateFolder("Upload Files", getFolderId());
+            syncFiles.setText("FINISHED");
         });
 
         dlFiles.setOnAction(value ->  {
-            downloadFolder(service,getFolderId(),"Upload Files");
-            //testing(service);
+            downloadFolder(getFolderId(),"Google Drive Sync");
+            //testing();
             dlFiles.setText("Clicked!");
         });
 
