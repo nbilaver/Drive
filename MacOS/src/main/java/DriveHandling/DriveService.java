@@ -16,8 +16,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.drive.model.Permission;
-import com.google.api.services.drive.model.PermissionList;
+import javafx.concurrent.Task;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -55,9 +54,7 @@ public class DriveService {
     }
 
     public DriveService() throws GeneralSecurityException, IOException {
-
     }
-
 
     /**
      * Creates an authorized Credential object.
