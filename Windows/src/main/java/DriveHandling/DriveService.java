@@ -16,8 +16,6 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.drive.model.Permission;
-import com.google.api.services.drive.model.PermissionList;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -43,21 +41,8 @@ public class DriveService {
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
     private static final String CREDENTIALS_FILE_PATH = "/DriveHandling/credentials.json";
 
-    private static Drive service;
-    static {
-        try {
-            service = driveConnect();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
-    }
-
     public DriveService() throws GeneralSecurityException, IOException {
-
     }
-
 
     /**
      * Creates an authorized Credential object.
@@ -85,7 +70,7 @@ public class DriveService {
 
     //Creates folder and saves id to fileLocations.csv
     //Returns Id of folder
-    public static String makeFolder(){
+    public static String makeFolder(Drive service){
         File fileMetadata = new File();
         fileMetadata.setName("Google Drive Sync");
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
@@ -109,16 +94,20 @@ public class DriveService {
 
     //Takes care of uploading file to google drive.
     //TODO folders haven't been tested.
-    public static void updateFolder(String path, String folderId){
+    public static void uploadFolder(Drive service, String folderId, String path){
+        System.out.println("RUNNING UPDATE FOLDER");
         try {
+            //service = driveConnect();
+            System.out.println("GOT PAST CONNECTING");
             java.io.File uploadF = new java.io.File(path);
             java.io.File[] directoryListing = uploadF.listFiles();
+            System.out.println("PAST FILE STUFF");
             if(directoryListing != null){
                 for(java.io.File child : directoryListing){
+                    System.out.println("GOING THROUGH CHILDREN");
                     if(child.getName().equals(".DS_Store")){
                         continue;
                     }
-
                     if(child.isFile()){
                         System.out.println("name = '" + child.getName() +"' and '" + folderId + "' in parents and trashed = false");
                         FileList result = service.files().list()
@@ -182,9 +171,11 @@ public class DriveService {
                                     .execute();
                             childId = file.getId();
                         }//Same thing about accounting for result.getFiles.size > 1, fix later
-                        updateFolder(path + "/" + child.getName(),childId);
+                        uploadFolder(service, path + "/" + child.getName(),childId);
                     }
                 }
+            } else {
+                System.out.println("IS NULL");
             }
         }
 //        catch(GoogleJsonResponseException e){
@@ -203,7 +194,7 @@ public class DriveService {
 
     //Downloads files from the google drive folder
     //TODO figure out recursive download of the folder
-    public static Boolean downloadFolder(String folderId, String path){
+    public static Boolean downloadFolder(Drive service, String folderId, String path){
         System.out.println("DOWNLOADING FILE");
 
         OutputStream outputStream = new ByteArrayOutputStream();
@@ -226,7 +217,7 @@ public class DriveService {
                     System.out.println(file.getMimeType());
                     System.out.println(file.getName());
                     if(file.getMimeType() != null && file.getMimeType().equals("application/vnd.google-apps.folder")){
-                        downloadFolder(file.getId(),path + "/" + file.getName());
+                        downloadFolder(service, file.getId(),path + "/" + file.getName());
                     } else {
                         service.files().get(file.getId())
                                 .executeMediaAndDownloadTo(outputStream);
@@ -248,7 +239,7 @@ public class DriveService {
 
     }
 
-    public static void testing(){
+    public static void testing(Drive service){
         try {
             FileList result = null;
             result = service.files().list()
@@ -271,7 +262,7 @@ public class DriveService {
 
 
     //Takes in specific file to update
-    public static void updateFile(String fileId){
+    public static void updateFile(Drive service,String fileId){
         try {
             File file = service.files().get(fileId).execute();
 
@@ -343,8 +334,9 @@ public class DriveService {
     }
 
     //TODO Verify Location of folder on client computer
-    public static Boolean verifyFolder(){
+    public static Boolean verifyFolder(Drive service){
         try {
+            //service = driveConnect();
             if(getFolderId() == null){
                 FileList result = service.files().list()
                         .setQ("name='Google Drive Sync' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
@@ -359,7 +351,7 @@ public class DriveService {
                     setFolderId(result.getFiles().get(0).getId());
                 } else {
                     System.out.println("made folder");
-                    makeFolder();
+                    makeFolder(service);
                 }
                 return true;
             } else {
@@ -372,7 +364,7 @@ public class DriveService {
                 System.out.println(folder.getTrashed());
                 if(folder.getTrashed()){
                     System.out.println("Folder is in trash, made new folder");
-                    makeFolder();
+                    makeFolder(service);
                     return true;
                 }
 
@@ -382,7 +374,7 @@ public class DriveService {
         } catch(GoogleJsonResponseException e){
             if(e.getStatusCode() == 404){
                 System.out.println("File Id is invalid, made new folder");
-                makeFolder();
+                makeFolder(service);
             } else {
                 e.printStackTrace();
             }
@@ -399,8 +391,5 @@ public class DriveService {
                 .build();
 
         return service;
-
-
-
     }
 }
